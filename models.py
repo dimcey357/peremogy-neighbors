@@ -85,3 +85,7 @@ class Show(Model):
 
     def __str__(self):
         return f'{self.user_id} - {self.house} : {self.section}-{self.floor}'
+
+
+# if __name__ == '__main__':
+#     db.create_tables([User, Show], safe=True)
