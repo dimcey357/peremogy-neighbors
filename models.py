@@ -43,28 +43,28 @@ class User(Model):
 
     def __str__(self):
         if self.apartment:
-            return f'{self.href} {self.username_}     {self.floor_ or "?"} пов. {self.apartment} 🚪'
+            return f'{self.href} {self.username_}     {self.floor_ or "?"} пов. {self.apartment} кв.'
         else:
             return f'{self.href} {self.username_}     {self.floor_ or "?"} пов.'
 
     def setting_str(self):
-        return f'Будинок <b>{self.house}</b> Секція <b>{self.section or "?"}</b> поверх ' \
+        return f'Будинок <b>{self.house}</b> п-зд <b>{self.section or "?"}</b> поверх ' \
             f'<b>{self.floor_ or "?"}</b> кв. <b>{self.apartment or "?"}</b>'
 
     def edit_btn_str(self):
-        return f'Будинок {self.house} Секція {self.section or "?"} пов. {self.floor_ or "?"} кв. {self.apartment or "?"}'
+        return f'Будинок {self.house} п-зд {self.section or "?"} пов. {self.floor_ or "?"} кв. {self.apartment or "?"}'
 
     def user_created(self):
         if self.apartment:
-            return f'{self.href} {self.username_} дом {self.house} сек. {self.section or "?"} эт. {self.floor_ or "?"} кв. {self.apartment} id {self.user_id}'
+            return f'{self.href} {self.username_} буд. {self.house} п-зд {self.section or "?"} пов. {self.floor_ or "?"} кв. {self.apartment} id {self.user_id}'
         else:
-            return f'{self.href} {self.username_} дом {self.house} сек. {self.section or "?"} эт. {self.floor_ or "?"} id {self.user_id}'
+            return f'{self.href} {self.username_} буд. {self.house} п-зд {self.section or "?"} пов. {self.floor_ or "?"} id {self.user_id}'
 
     def joined_str(self):
         if self.apartment:
-            return f'{self.href} {self.username_}   {self.house} буд. {self.section} сек.  {self.floor_ or "?"} пов. {self.apartment} 🚪'
+            return f'{self.href} {self.username_}   {self.house} буд. {self.section} п-зд  {self.floor_ or "?"} пов. {self.apartment} кв.'
         else:
-            return f'{self.href} {self.username_}   {self.house} буд. {self.section} сек.  {self.floor_ or "?"} пов.'
+            return f'{self.href} {self.username_}   {self.house} буд. {self.section} п-зд  {self.floor_ or "?"} пов.'
 
 
 class Show(Model):

@@ -464,7 +464,7 @@ def show_house(bot, update):
         bot.sendMessage(chat_id=update.effective_user.id, parse_mode=ParseMode.HTML, text=show_list,
                         reply_markup=reply_markup)
     else:
-        part_1, part_2, part_3 = show_list.partition('📭 <b>Секція 4'.rjust(30, ' ') + '</b>' + '\n')
+        part_1, part_2, part_3 = show_list.partition('📭 <b>Під\'їзд №4'.rjust(30, ' ') + '</b>' + '\n')
         bot.sendMessage(chat_id=update.effective_user.id, parse_mode=ParseMode.HTML, text=part_1[:-2])
         # to do: remove "." from 2nd msg. Without that dot, rjust not works
         bot.sendMessage(chat_id=update.effective_user.id, parse_mode=ParseMode.HTML, text='.' + part_2 + part_3,
