@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.idea
+*.log
+temp.py
+temp2.py
+data.xlsm
+users.db
+venv/
+img/error.jpg
+img/mayby.jpg
+logs/
