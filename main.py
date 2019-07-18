@@ -410,7 +410,7 @@ def apartment_save(bot, update):
         user_mode.save()
         user_created_report(bot, update, created_user=user, text=text)
         new_neighbor_report(bot, update, created_user=user)
-        start_command(bot, update)
+        menu_kbd(bot, update)
 
 
 def save_user_data(bot, update):
@@ -536,7 +536,8 @@ def greeting(bot, update):
 
 
 def prepare_data():
-    """Create show_list (string) for statistic message, and pie_values (list) for chart"""
+    """Create show_list (string) for statistic message, and pie_values (list) for chart. 
+    return from func if no users in db"""
     log.info('this func has no update')
     query = User.select()
     query_with = query.where(User.house, User.section)
@@ -544,9 +545,12 @@ def prepare_data():
     houses = query_with.select(User.house).distinct().order_by(User.house)
 
     # did users indicate their info
-    introduced = {'Так': query_with.count(), 'Ні': query_without.count()}
+    introduced = {'Yes': query_with.count(), 'No': query_without.count()}
     # last 3 joined users
     last_3_users = list(reversed(query_with.order_by(User.id)[-3:]))
+    
+    if not last_3_users:
+        return
 
     neighbors = []
     pie_values = []
@@ -567,7 +571,7 @@ def prepare_data():
                  f'<i>Дані вказані {introduced["Yes"]}</i>\n'
                  f'<i>Дані не вказані {introduced["No"]}</i>\n'
                  + '{}' * len(neighbors)).format(*neighbors) + '\n<b>Нові сусіди</b>'
-
+    
     # add to msg last 3 joined users
     for i in range(len(last_3_users)):
         show_list += f'\n{last_3_users[i].joined_str()}'
@@ -578,14 +582,14 @@ def prepare_data():
 def statistics(bot, update):
     """callbackQuery handler. pattern:^statistics$"""
     log.info(log_msg(update))
+    update.callback_query.answer()
     keyboard = [[InlineKeyboardButton('Меню', callback_data='_menu'),
                  InlineKeyboardButton('Графіка', callback_data='charts')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     show_list = prepare_data()['show_list']
     bot.sendMessage(chat_id=update.effective_user.id, parse_mode=ParseMode.HTML, text=show_list,
                     reply_markup=reply_markup)
-    update.callback_query.answer()
-
+    
 
 def make_pie(prepared_data):
     """create pie total by houses"""
@@ -670,7 +674,8 @@ def charts(bot, update):
     make_pie(prepared_data)
     make_bars(prepared_data)
 
-    charts_list = (os.listdir(os.path.join('img', 'charts')))
+    charts_dir = os.path.join('img', 'charts')
+    charts_list = sorted([f for f in os.listdir(charts_dir) if not f.startswith('.')])
     media = [InputMediaPhoto(open(os.path.join('img', 'charts', i), 'rb')) for i in charts_list]
 
     bot.sendMediaGroup(chat_id=update.effective_user.id, media=media)
