@@ -650,7 +650,7 @@ def make_bars(prepared_data):
     mpl.rcParams.update({'font.size': 15})
 
     for house in values_:
-        sections = [f'П-зд {i[-1]}' for i in houses_arr[f'house_{house}']]
+        sections = [f'під\'їзд {i[-1]}' for i in houses_arr[f'house_{house}']]
         values = [values_[house].get(int(i[-1]), 0) for i in sections]
 
         plt.bar(sections, values)
