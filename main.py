@@ -16,18 +16,17 @@ from config import log, log_chat, log_msg
 from functools import wraps
 
 KEY = sys.argv[1]
+ADMIN_ID = sys.argv[2]
 print('key ...' + KEY[-6:] + ' successfully used')
 
 
 def send_typing_action(func):
     """Sends typing action while processing func command."""
-
     @wraps(func)
     def command_func(*args, **kwargs):
         bot, update = args
         bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.UPLOAD_DOCUMENT)
         return func(bot, update, **kwargs)
-
     return command_func
 
 
@@ -102,7 +101,6 @@ def building(bot, update):
 def new_neighbor_report(bot, update, created_user):
     """Send message for users who enabled notifications"""
     log.info(log_msg(update))
-
     # query for users who set notifications as _notify_house
     query_params = Show.select(Show.user_id).where(Show.notification_mode == '_notify_house')
     query_users = User.select(User.user_id).where(User.house == created_user.house)
@@ -115,7 +113,7 @@ def new_neighbor_report(bot, update, created_user):
             bot.sendMessage(chat_id=user.user_id, parse_mode=ParseMode.HTML,
                             text=f'Новий сусід\n{created_user.joined_str()}')
         except BadRequest as err:
-            bot.sendMessage(chat_id=422485737, text=f'failed to send notification for user {user.user_id} {err}',
+            bot.sendMessage(chat_id=ADMIN_ID, text=f'failed to send notification for user {user.user_id} {err}',
                             parse_mode=ParseMode.HTML)
 
     # query for users who set notifications as _notify_section    
@@ -129,14 +127,17 @@ def new_neighbor_report(bot, update, created_user):
             bot.sendMessage(chat_id=user.user_id, parse_mode=ParseMode.HTML,
                             text=f'Новий сусід\n{created_user.joined_str()}')
         except BadRequest as err:
-            bot.sendMessage(chat_id=422485737, text=f'failed to send notification for user {user.user_id} {err}',
+            bot.sendMessage(chat_id=ADMIN_ID, text=f'failed to send notification for user {user.user_id} {err}',
                             parse_mode=ParseMode.HTML)
 
 
 def user_created_report(bot, update, created_user, text):
     """when created new, or updated user - send report-message for admins"""
-    bot.sendMessage(chat_id=422485737, parse_mode=ParseMode.HTML, text=f'{text} {created_user.user_created()}')
-    bot.sendMessage(chat_id=986555, parse_mode=ParseMode.HTML, text=f'{text} {created_user.user_created()}')
+    bot.sendMessage(chat_id=ADMIN_ID, parse_mode=ParseMode.HTML, text=f'{text} {created_user.user_created()}')
+    try:
+        bot.sendMessage(chat_id=986555, parse_mode=ParseMode.HTML, text=f'{text} {created_user.user_created()}')
+    except BadRequest:
+        pass
 
 
 def menu_kbd(bot, update):
@@ -249,7 +250,7 @@ def section_kbd(bot, update):
                  InlineKeyboardButton('П-зд №6', callback_data='p_s6')],
                 [InlineKeyboardButton('Показати всіх в цьому будинку? ', callback_data='show_this_house')]]
 
-    if user_query.house in [87]:
+    if user_query.house == 87:
         del keyboard[1:3]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -298,7 +299,7 @@ def set_section_kbd(bot, update):
                  InlineKeyboardButton('П-зд №6', callback_data='_s6')],
                 [InlineKeyboardButton('Завершити редагування', callback_data='_section_reject')]]
 
-    if user.house in [87]:
+    if user.house == 87:
         del keyboard[1:3]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -374,8 +375,8 @@ def jubilee(bot, update, created_user):
     text = f'сусідів 🎇 🎈 🎉 🎆 🍹\nВітаємо\n{created_user.joined_str()}'
 
     # to do: celebrate once! There is a bug. It will be celebrate each time for house 1, until count will stay at 100
-    # if query.count() in celebration_count:
-    #    text = f'Вже зареєстровано {query.count()} ' + text
+    if query.count() in celebration_count:
+        text = f'Вже зареєстровано {query.count()} ' + text
     if query.where(User.house == 89).count() in celebration_count:
         text = f'В будинку №89 вже зареєстровано {query.where(User.house == 89).count()} ' + text
     elif query.where(User.house == 87).count() in celebration_count:
@@ -487,8 +488,9 @@ def show_section(bot, update, some_section=False):
         User.section == user_query.section).order_by(User.floor)
     neighbors = [str(user) + '\n' for user in query]
 
-    show_list = ('<b>Мешканці під\'їзду № ' + str(user_query.section) + ' Будинку № ' + str(user_query.house) + '</b>:\n'
-                 + '{}' * len(neighbors)).format(*neighbors)
+    show_list = (
+                '<b>Мешканці під\'їзду № ' + str(user_query.section) + ' Будинку № ' + str(user_query.house) + '</b>:\n'
+                + '{}' * len(neighbors)).format(*neighbors)
 
     bot.sendMessage(chat_id=update.effective_user.id, parse_mode=ParseMode.HTML,
                     disable_web_page_preview=True, text=show_list, reply_markup=reply_markup)
@@ -497,15 +499,16 @@ def show_section(bot, update, some_section=False):
 
 def catch_err(bot, update, error):
     """handle all telegram errors end send report. There is no 'update' so can't logging much info"""
+    log.info(f'{error} {type(error)}')
     user_id = update.effective_user.id if update else 'no update'
     try:
         raise error
     except Unauthorized:
-        bot.sendMessage(chat_id=422485737, text=f'ERROR:\n {error}\n type {type(error)} id: {user_id}')
+        bot.sendMessage(chat_id=ADMIN_ID, text=f'ERROR:\n {error}\n type {type(error)} id: {user_id}')
     except BadRequest:
-        bot.sendMessage(chat_id=422485737, text=f'ERROR:\n {error}\n type {type(error)} id: {user_id}')
+        bot.sendMessage(chat_id=ADMIN_ID, text=f'ERROR:\n {error}\n type {type(error)} id: {user_id}')
     except (TimedOut, NetworkError, TelegramError):
-        bot.sendMessage(chat_id=422485737, text=f'ERROR:\n {error}\n type {type(error)} id: {user_id}')
+        bot.sendMessage(chat_id=ADMIN_ID, text=f'ERROR:\n {error}\n type {type(error)} id: {user_id}')
 
 
 # to do: apply to more then 1 custom filter
@@ -548,7 +551,7 @@ def prepare_data():
     introduced = {'Yes': query_with.count(), 'No': query_without.count()}
     # last 3 joined users
     last_3_users = list(reversed(query_with.order_by(User.id)[-3:]))
-    
+
     if not last_3_users:
         return
 
@@ -571,7 +574,7 @@ def prepare_data():
                  f'<i>Дані вказані {introduced["Yes"]}</i>\n'
                  f'<i>Дані не вказані {introduced["No"]}</i>\n'
                  + '{}' * len(neighbors)).format(*neighbors) + '\n<b>Нові сусіди</b>'
-    
+
     # add to msg last 3 joined users
     for i in range(len(last_3_users)):
         show_list += f'\n{last_3_users[i].joined_str()}'
@@ -589,7 +592,7 @@ def statistics(bot, update):
     show_list = prepare_data()['show_list']
     bot.sendMessage(chat_id=update.effective_user.id, parse_mode=ParseMode.HTML, text=show_list,
                     reply_markup=reply_markup)
-    
+
 
 def make_pie(prepared_data):
     """create pie total by houses"""
@@ -650,7 +653,7 @@ def make_bars(prepared_data):
     mpl.rcParams.update({'font.size': 15})
 
     for house in values_:
-        sections = [f'під\'їзд {i[-1]}' for i in houses_arr[f'house_{house}']]
+        sections = [f'П-зд {i[-1]}' for i in houses_arr[f'house_{house}']]
         values = [values_[house].get(int(i[-1]), 0) for i in sections]
 
         plt.bar(sections, values)
@@ -730,7 +733,7 @@ def del_command(bot, update):
     except KeyError:
         pass
 
-    
+
 def talkative(bot, update):
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('Меню', callback_data='_menu')]])
     data = {}
@@ -744,7 +747,7 @@ def talkative(bot, update):
                 data[id_.strip()] = [0, 0, name]
             except AttributeError:
                 pass
-            
+
     for i in data:
         chat_file = open('log_chatfile.log', mode='r', encoding='utf-8')
         for line in chat_file.readlines():
@@ -752,17 +755,18 @@ def talkative(bot, update):
             if id_.strip() == i:
                 data[i][0] += len(line.split('msg: ')[1].strip())
                 data[i][1] += 1
-    
-    by_chars = sorted(data.items(), key = lambda x : x[1][0], reverse=True)
-    by_msgs = sorted(data.items(), key = lambda x : x[1][1], reverse=True)
-    
+
+    by_chars = sorted(data.items(), key=lambda x: x[1][0], reverse=True)
+    by_msgs = sorted(data.items(), key=lambda x: x[1][1], reverse=True)
+
     template = '<a href="tg://user?id={}">{}</a> {}'
-    
+
     talkatives_chars = [template.format(user[0], user[1][2], user[1][0]) + '\n' for user in by_chars[:10]]
     talkatives_msgs = [template.format(user[0], user[1][2], user[1][1]) + '\n' for user in by_msgs[:10]]
-        
+
     show_list = ('<b>Лідери по кількості знаків</b>\n' + '{}' * len(talkatives_chars)).format(*talkatives_chars) + \
-                '\n' + ('<b>Лідери по кількості повідомлень</b>\n' + '{}' * len(talkatives_msgs)).format(*talkatives_msgs)
+                '\n' + ('<b>Лідери по кількості повідомлень</b>\n' + '{}' * len(talkatives_msgs)).format(
+        *talkatives_msgs)
 
     bot.sendMessage(chat_id=update.effective_user.id, parse_mode=ParseMode.HTML,
                     disable_web_page_preview=True, text=show_list, reply_markup=reply_markup)
