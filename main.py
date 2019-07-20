@@ -146,7 +146,7 @@ def menu_kbd(bot, update):
     if User.get(user_id=update.effective_user.id).house and User.get(user_id=update.effective_user.id).section:
         keyboard = [[InlineKeyboardButton('Дивитись сусідів 👫', callback_data='show')],
                     [InlineKeyboardButton('Змінити свої дані ✏', callback_data='edit')],
-                    [InlineKeyboardButton('Важлива інфа 👀', callback_data='building')],
+                    [InlineKeyboardButton('Важлива інфа ℹ', callback_data='building')],
                     [InlineKeyboardButton('Статистика бота 📊️', callback_data='statistics')],
                     [InlineKeyboardButton('Мій будинок 🏠', callback_data='house_neighbors'),
                      InlineKeyboardButton('Мій під\'їзд 🔢', callback_data='section_neighbors')],
@@ -154,7 +154,7 @@ def menu_kbd(bot, update):
     else:
         keyboard = [[InlineKeyboardButton('Дивитись сусідів 👫', callback_data='show')],
                     [InlineKeyboardButton('Додати свої дані 📝', callback_data='edit')],
-                    [InlineKeyboardButton('Важлива інфа 👀', callback_data='building')],
+                    [InlineKeyboardButton('Важлива інфа ℹ', callback_data='building')],
                     [InlineKeyboardButton('Статистика бота 📊️', callback_data='statistics')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     bot.sendMessage(chat_id=update.effective_user.id, text='Меню:',
