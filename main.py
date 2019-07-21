@@ -571,7 +571,7 @@ def prepare_data():
     bars_values = {}
     for house_ in houses:
         count = query_with.where(User.house == house_.house).count()
-        pie_values.append(count)
+        pie_values.append((house_.house, count))
         neighbors.append('\n' + '🏠 <b>Будинок '.rjust(30, ' ') + f'{house_.house}</b> <code>({count})</code>\n')
         sections = query_with.select(User.section).where(User.house == house_.house).distinct().order_by(User.section)
         section_dict = {}
@@ -619,8 +619,8 @@ def make_pie(prepared_data):
         return my_autopct
 
     # pie by house    
-    values = prepared_data['pie_values']
-    labels = [f'Буд. {i + 1}' for i in range(len(values))]
+    values = [i[1] for i in prepared_data['pie_values']]
+    labels = [f'Буд. {i[0]}' for i in prepared_data['pie_values']]
 
     fig = plt.figure(figsize=(10, 7))
     mpl.rcParams.update({'font.size': 20})
