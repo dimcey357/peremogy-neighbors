@@ -544,7 +544,7 @@ def del_msg(bot, update):
 def greeting(bot, update):
     """handle new chat members, and sent greeting message. Delete after delay. Running async"""
     log.info(log_msg(update))
-    new_member_name = update.message.from_user.full_name
+    new_member_name = update.message.new_chat_members[0].full_name
     text = greeting_msg.format(new_member_name)
     update.message.reply_text(text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 

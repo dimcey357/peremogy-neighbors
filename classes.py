@@ -43,4 +43,5 @@ class FilterBlock(BaseFilter):
             found = re.findall(pattern, message.text, flags=re.IGNORECASE)
             return found if found else False
 
+
 block_filter = FilterBlock()
