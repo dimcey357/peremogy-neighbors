@@ -9,7 +9,7 @@ import re
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from datetime import datetime
-from models import User, Show
+from models import User, Show, Jubilee
 from constants import help_msg, about_msg, building_msg, houses_arr, greeting_msg
 from classes import filt_integers, filt_call_err, block_filter
 from config import log, log_chat, log_msg
@@ -22,11 +22,13 @@ print('key ...' + KEY[-6:] + ' successfully used')
 
 def send_typing_action(func):
     """Sends typing action while processing func command."""
+
     @wraps(func)
     def command_func(*args, **kwargs):
         bot, update = args
         bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.UPLOAD_DOCUMENT)
         return func(bot, update, **kwargs)
+
     return command_func
 
 
@@ -370,25 +372,34 @@ def group_chat_logging(bot, update):
 def jubilee(bot, update, created_user):
     """Check if new added user is 'hero of the day' i.e some round number in db"""
     log.info(log_msg(update))
-    celebration_count = [i for i in range(0, 1000, 50)]
+    celebration_count = [i for i in range(0, 2000, 50)]
     query = User.select().where(User.house, User.section)
+
+    check_list = {85: query.where(User.house == 85).count(),
+                  87: query.where(User.house == 87).count(),
+                  89: query.where(User.house == 89).count()}
+    total = query.count()
     text = f'сусідів 🎇 🎈 🎉 🎆 🍹\nВітаємо\n{created_user.joined_str()}'
 
-    # to do: celebrate once! There is a bug. It will be celebrate each time for house 1, until count will stay at 100
-    if query.count() in celebration_count:
-        text = f'Вже зареєстровано {query.count()} ' + text
-    if query.where(User.house == 89).count() in celebration_count:
-        text = f'В будинку №89 вже зареєстровано {query.where(User.house == 89).count()} ' + text
-    elif query.where(User.house == 87).count() in celebration_count:
-        text = f'В будинку №87 вже зареєстровано {query.where(User.house == 87).count()} ' + text
-    elif query.where(User.house == 85).count() in celebration_count:
-        text = f'В будинку №85 вже зареєстровано {query.where(User.house == 85).count()} ' + text
-    else:
-        return
-    try:
-        bot.sendMessage(chat_id=-1001076439601, text=text, parse_mode=ParseMode.HTML)  # test chat
-    except BadRequest:
-        bot.sendMessage(chat_id=-1001307649156, text=text, parse_mode=ParseMode.HTML)
+    for house in check_list.items():
+        if house[1] in celebration_count:
+            x, created = Jubilee.get_or_create(house=house[0], count=house[1])
+            if created:
+                text = f'В будинку № {house[0]} Вже зареєстровано {house[1]} ' + text
+                try:
+                    bot.sendMessage(chat_id=-1001076439601, text=text, parse_mode=ParseMode.HTML)  # test chat
+                except BadRequest:
+                    bot.sendMessage(chat_id=-1001307649156, text=text, parse_mode=ParseMode.HTML)  # group chat
+                return
+
+    if total in celebration_count:
+        text = f'Вже зареэстровано {total} сусідів 🎇 🎈 🎉 🎆 🍹\nВітаємо\n{created_user.joined_str()}'
+        x, created = Jubilee.get_or_create(house=0, count=total)
+        if created:
+            try:
+                bot.sendMessage(chat_id=-1001076439601, text=text, parse_mode=ParseMode.HTML)  # test chat
+            except BadRequest:
+                bot.sendMessage(chat_id=-1001307649156, text=text, parse_mode=ParseMode.HTML)  # group chat
 
 
 def apartment_save(bot, update):
@@ -489,8 +500,8 @@ def show_section(bot, update, some_section=False):
     neighbors = [str(user) + '\n' for user in query]
 
     show_list = (
-                '<b>Мешканці під\'їзду № ' + str(user_query.section) + ' Будинку № ' + str(user_query.house) + '</b>:\n'
-                + '{}' * len(neighbors)).format(*neighbors)
+            '<b>Мешканці під\'їзду № ' + str(user_query.section) + ' Будинку № ' + str(user_query.house) + '</b>:\n'
+            + '{}' * len(neighbors)).format(*neighbors)
 
     bot.sendMessage(chat_id=update.effective_user.id, parse_mode=ParseMode.HTML,
                     disable_web_page_preview=True, text=show_list, reply_markup=reply_markup)
@@ -735,26 +746,30 @@ def del_command(bot, update):
 
 
 def talkative(bot, update):
+    """Statistics for messaging in group chat. Show top 10 by msgs and by chars"""
+    log.info(log_msg(update))
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton('Меню', callback_data='_menu')]])
-    data = {}
-    pattern = r' [0-9]{6,10} '
-    with open('log_chatfile.log', mode='r', encoding='utf-8') as file:
-        lines = file.readlines()
-        for line in lines:
-            try:
-                id_ = line.partition(re.search(pattern, line).group(0))[1]
-                name = line[line.find('name: ') + 6: line.find(' usrnm: ')]
-                data[id_.strip()] = [0, 0, name]
-            except AttributeError:
-                pass
 
-    for i in data:
-        chat_file = open('log_chatfile.log', mode='r', encoding='utf-8')
-        for line in chat_file.readlines():
-            id_ = line.partition(re.search(pattern.strip(), i).group(0))[1]
-            if id_.strip() == i:
-                data[i][0] += len(line.split('msg: ')[1].strip())
-                data[i][1] += 1
+    log_files_list = [f for f in os.listdir('logfiles') if not f.startswith('.')]
+    data = {}
+    id_pattern = r' ([0-9]{6,10}) '
+    pattern = r' ([0-9]{6,10}) name: (.*) usrnm: '
+
+    for log_file in log_files_list:
+        with open(os.path.join('logfiles', log_file), mode='r', encoding='utf-8') as file:
+            text = file.read()
+            match = list(set(re.findall(pattern, text)))
+            data = {i[0]: [0, 0, i[1]] for i in match}
+
+    for log_file in log_files_list:
+        with open(os.path.join('logfiles', log_file), mode='r', encoding='utf-8') as file:
+            for line in file.readlines():
+                try:
+                    id_ = re.search(id_pattern, line).group().strip()
+                    data[id_][0] += len(line.split('msg: ')[1].strip())
+                    data[id_][1] += 1
+                except (KeyError, AttributeError):
+                    pass
 
     by_chars = sorted(data.items(), key=lambda x: x[1][0], reverse=True)
     by_msgs = sorted(data.items(), key=lambda x: x[1][1], reverse=True)
@@ -764,8 +779,9 @@ def talkative(bot, update):
     talkatives_chars = [template.format(user[0], user[1][2], user[1][0]) + '\n' for user in by_chars[:10]]
     talkatives_msgs = [template.format(user[0], user[1][2], user[1][1]) + '\n' for user in by_msgs[:10]]
 
-    show_list = ('<b>Лідери по кількості знаків</b>\n' + '{}' * len(talkatives_chars)).format(*talkatives_chars) + \
-                '\n' + ('<b>Лідери по кількості повідомлень</b>\n' + '{}' * len(talkatives_msgs)).format(
+    show_list = ('<b>Лідери по кількості знаків</b>\n' + '{}'
+                 * len(talkatives_chars)).format(*talkatives_chars) + '\n' + \
+                ('<b>Лідери по кількості повідомлень</b>\n' + '{}' * len(talkatives_msgs)).format(
         *talkatives_msgs)
 
     bot.sendMessage(chat_id=update.effective_user.id, parse_mode=ParseMode.HTML,

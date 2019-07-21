@@ -87,5 +87,15 @@ class Show(Model):
         return f'{self.user_id} - {self.house} : {self.section}-{self.floor}'
 
 
-# if __name__ == '__main__':
-#     db.create_tables([User, Show], safe=True)
+class Jubilee(Model):
+    class Meta:
+        database = db
+        db_table = "jubilee"
+
+    house = IntegerField()
+    count = IntegerField()
+    celebrated = DateTimeField(default=time_format)
+
+
+if __name__ == '__main__':
+    db.create_tables([User, Show, Jubilee], safe=True)
