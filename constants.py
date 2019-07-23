@@ -39,11 +39,7 @@ building_msg = '''
 💠 Головні ресурси для сусідів ЖК Перемоги
 
 👉 <a href="https://t.me/podedi_bot">Корисний інфобот</a>
-👉 <a href="https://t.me/peremoga_vazhno">Канал Срочно/Важно</a>
-👉 <a href="https://t.me/joinchat/AA8Nu0KlQ0_EE8nxd2oMfg">Главный чат</a>
-👉 <a href="https://t.me/joinchat/AA8Nuw0ucJV9huouwbKBGg">Куплю/Продам</a>
-👉 <a href="https://t.me/joinchat/Ds_MakHKn3yMUKgRjMbFqw">Авточат</a>
-👉 <a href="https://t.me/joinchat/GdJschAO8ZtoIk5gwtsyaw">Мамы</a>
+👉 <a href="https://t.me/peremoga_vazhno">Канал Терміново/Важливо</a>
 
 💠 Комендант Світлана Юріївна
 
