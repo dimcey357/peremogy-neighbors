@@ -154,10 +154,7 @@ def menu_kbd(bot, update):
                      InlineKeyboardButton('Мій під\'їзд 🔢', callback_data='section_neighbors')],
                     [InlineKeyboardButton('Сповіщення 🔔', callback_data='notifications')]]
     else:
-        keyboard = [[InlineKeyboardButton('Дивитись сусідів 👫', callback_data='show')],
-                    [InlineKeyboardButton('Додати свої дані 📝', callback_data='edit')],
-                    [InlineKeyboardButton('Важлива інфа ℹ', callback_data='building')],
-                    [InlineKeyboardButton('Статистика бота 📊️', callback_data='statistics')]]
+        keyboard = [[InlineKeyboardButton('Додати свої дані 📝', callback_data='edit')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     bot.sendMessage(chat_id=update.effective_user.id, text='Меню:',
                     reply_markup=reply_markup, parse_mode=ParseMode.HTML)
@@ -336,6 +333,7 @@ def set_floor_kbd(bot, update):
 def set_apartment_kbd(bot, update):
     """func show message with ask to tell its own appartment"""
     log.info(log_msg(update))
+    update.callback_query.answer()
     floor = [s for s in list(update.callback_query.data) if s.isdigit()]
     floor = int(''.join(floor))
 
@@ -347,9 +345,10 @@ def set_apartment_kbd(bot, update):
     user_mode.msg_apart_mode = True
     user_mode.save()
 
-    text = 'З якої Ви квартири? \nВкажіть в повідомленні номер квартири числом:'
-    update.callback_query.message.reply_text(text=text)
-    update.callback_query.answer()
+    text = 'В якій ви квартирі? \nНапишіть в повідомленні номер квартири, або нажміть кнопку відмови:'
+    keyboard = [[InlineKeyboardButton('Не хочу вказувати квартиру', callback_data='_apart_reject')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.callback_query.message.reply_text(text=text, reply_markup=reply_markup)
 
 
 def msg_handler(bot, update):
