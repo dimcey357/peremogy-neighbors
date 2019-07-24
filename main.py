@@ -172,11 +172,11 @@ def check_owns(bot, update):
             return
         else:
             if not User.get(user_id=update.effective_user.id).house:
-                text = 'В якому Ви будинку? 🏠 :'
+                text = 'В якому Ви будинку? '
                 set_houses_kbd(bot, update, text)
             else:
                 text = 'Змінюємо Ваші дані:\n' + User.get(
-                    user_id=update.effective_user.id).setting_str() + '\nВ якому Ви будинку ? 🏠 :'
+                    user_id=update.effective_user.id).setting_str() + '\nВ якому Ви будинку? '
                 set_houses_kbd(bot, update, text)
     # if more than 1 records for user, call func for select
     else:
@@ -187,13 +187,13 @@ def select_owns(bot, update):
     """if user have more than 1 records in db, select which one to show/edit"""
     log.info(log_msg(update))
     if update.callback_query.data == 'house_neighbors':
-        text = 'Сусіди по якому будинку? :'
+        text = 'Сусіди по якому будинку? '
         view_edit = 'view_my_house'
     elif update.callback_query.data == 'section_neighbors':
-        text = 'Під\'їзд якої з Ваших квартир? :'
+        text = 'Під\'їзд якої з Ваших квартир? '
         view_edit = 'view_my_secti'
     else:
-        text = 'Яку адресу змінити? :'
+        text = 'Яку адресу змінити? '
         view_edit = 'edit'
     keyboard = []
     user_owns = User.select().where(User.user_id == update.effective_user.id)
@@ -220,7 +220,7 @@ def owns_selected(bot, update):
         show_section(bot, update)
     else:
         user = User.select().where(User.user_id == update.effective_user.id)[owns]
-        text = 'Змінюємо Ваші дані:\n' + user.setting_str() + '\nВ якому Ви будинку ? 🏠 :'
+        text = 'Змінюємо Ваші дані:\n' + user.setting_str() + '\nВ якому Ви будинку ? '
         set_houses_kbd(bot, update, text)
     update.callback_query.answer()
 
@@ -232,7 +232,7 @@ def houses_kbd(bot, update):
                  InlineKeyboardButton('Будинок 87', callback_data='p_h87')],
                 [InlineKeyboardButton('Будинок 89', callback_data='p_h89')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.callback_query.message.reply_text('Який будинок показати ? 🏠 :', reply_markup=reply_markup)
+    update.callback_query.message.reply_text('Який будинок показати ? ', reply_markup=reply_markup)
     update.callback_query.answer()
 
 
@@ -326,7 +326,7 @@ def set_floor_kbd(bot, update):
         keyboard.append(floor)
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.callback_query.message.reply_text('На якому Ви поверсі ? 🧗 :', reply_markup=reply_markup)
+    update.callback_query.message.reply_text('На якому Ви поверсі ? ', reply_markup=reply_markup)
     update.callback_query.answer()
 
 
@@ -345,7 +345,7 @@ def set_apartment_kbd(bot, update):
     user_mode.msg_apart_mode = True
     user_mode.save()
 
-    text = 'В якій ви квартирі? \nНапишіть в повідомленні номер квартири, або нажміть кнопку відмови:'
+    text = 'В якій ви квартирі? \nНапишіть в повідомленні номер квартири, або натисніть кнопку відмови:'
     keyboard = [[InlineKeyboardButton('Не хочу вказувати квартиру', callback_data='_apart_reject')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.callback_query.message.reply_text(text=text, reply_markup=reply_markup)
@@ -702,7 +702,8 @@ def notifications_kbd(bot, update):
     log.info(log_msg(update))
     keyboard = [[InlineKeyboardButton('В моєму будинку 🏠', callback_data='_notify_house')],
                 [InlineKeyboardButton('В моєму під\'їзді 🔢', callback_data='_notify_section')],
-                [InlineKeyboardButton('Вимкнути сповіщення 🔕', callback_data='_notify_OFF')]]
+                [InlineKeyboardButton('Вимкнути сповіщення 🔕', callback_data='_notify_OFF')],
+                [InlineKeyboardButton('Меню', callback_data='_menu')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     user = Show.get(user_id=update.effective_user.id)
     _dict = {None: 'Вимкнено', '_notify_OFF': 'Вимкнено',
