@@ -388,7 +388,7 @@ def jubilee(bot, update, created_user):
                 try:
                     bot.sendMessage(chat_id=-1001076439601, text=text, parse_mode=ParseMode.HTML)  # test chat
                 except BadRequest:
-                    bot.sendMessage(chat_id=-1001307649156, text=text, parse_mode=ParseMode.HTML)  # group chat
+                    bot.sendMessage(chat_id=-1001118126927, text=text, parse_mode=ParseMode.HTML)  # group chat
                 return
 
     if total in celebration_count:
@@ -398,7 +398,7 @@ def jubilee(bot, update, created_user):
             try:
                 bot.sendMessage(chat_id=-1001076439601, text=text, parse_mode=ParseMode.HTML)  # test chat
             except BadRequest:
-                bot.sendMessage(chat_id=-1001307649156, text=text, parse_mode=ParseMode.HTML)  # group chat
+                bot.sendMessage(chat_id=-1001118126927, text=text, parse_mode=ParseMode.HTML)  # group chat
 
 
 def apartment_save(bot, update):
@@ -731,7 +731,6 @@ def notifications_save(bot, update):
 def del_command(bot, update):
     """For deleting commands sent in group chat. MessageHandler(Filters.command & Filters.group).
     If so - delete message from group chat. """
-    print(update)
     command = re.sub(r'@.*', '', update.message.text)
     log.info(log_msg(update) + f' DEL {command}')
     chat_id = update.message.chat_id
