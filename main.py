@@ -731,6 +731,7 @@ def notifications_save(bot, update):
 def del_command(bot, update):
     """For deleting commands sent in group chat. MessageHandler(Filters.command & Filters.group).
     If so - delete message from group chat. """
+    print(update)
     command = re.sub(r'@.*', '', update.message.text)
     log.info(log_msg(update) + f' DEL {command}')
     chat_id = update.message.chat_id
